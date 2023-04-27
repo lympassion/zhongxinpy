@@ -9,6 +9,7 @@ from torch import Tensor
 from torch.utils.data import TensorDataset, DataLoader
 from torch import optim
 from torch.nn.modules.loss import CrossEntropyLoss
+import json
 
 from pathlib import Path
 
@@ -20,6 +21,8 @@ import nn_model
 
 working_dir = Path('.')
 DATA_PATH = Path("./zx_data/train.csv")
+DATA_TEST_PATH = Path("./zx_data/pre_contest_test1.csv")
+
 save_model_path = working_dir / 'zx_model'
 
 
@@ -39,6 +42,7 @@ device = torch.device("cuda") if torch.cuda.is_available() else torch.device("cp
 random_seed = 42
 
 df = pd.read_csv(DATA_PATH)
+df_test = pd.read_csv(DATA_TEST_PATH)
 
 # print(set(df['label']))
 # print(df.info())
@@ -50,16 +54,18 @@ df = pd.read_csv(DATA_PATH)
 if __name__ == '__main__':
 
     df, feature_useful = process_feature(df)
-    train_valid_test_ls = train_valid_test(df)
+    df_test, _ = process_feature(df_test)
+
+    train_valid_ls = train_valid(df)
     print('feature_useful:\n', len(feature_useful), feature_useful)
 
 
     print('before get loader')
-    train_dl, valid_dl = get_loader(train_valid_test_ls, feature_useful, bs)
+    train_dl, valid_dl, test_dl = get_loader(train_valid_ls, df_test, feature_useful, bs)
+
 
     # Training with Adams Optimizer
-    ## Instantiate model, optimizer and loss function
-    CNN = 3  # 2: CNN_1D_2L else: CNN_1D_3L
+    CNN = 2  # 2: CNN_1D_2L else: CNN_1D_3L
     if CNN==2:
         model = nn_model.CNN_1D_2L(len(feature_useful))
     else:
@@ -82,16 +88,27 @@ if __name__ == '__main__':
         model2 = nn_model.CNN_1D_3L(len(feature_useful))
         model2.load_state_dict(torch.load(save_model_path / 'model3.pth'))
 
-    model2.eval()
-    print('开始验证')
-    mean_loss, accuracy, _ = validate(model, valid_dl, loss_func)
-    print(mean_loss, accuracy)
+    title = str(CNN) + 'layer  ' + '5 5' + 'kernel' + 'have dropout' + ' without normal'
     metrics.plot(y = ['val_loss','val_accuracy','train_loss', 'train_accuracy'])
-    # title = '3'+'layer  '+'9 9 9'+'kernel' + 'without dropout norm'
-    title = str(CNN)+'layer  '+'5 5 5'+'kernel' + 'have dropout' + ' without normal'
-
     plt.title(title)
-    plt.xlabel('accuracy'+('%.5f'%accuracy))
+    plt.xlabel('accuracy' + ('%.5f' % metrics.at[epochs-1, 'val_accuracy']))
     plt.savefig('./images/' + title)
     plt.show()
+    print('准确率', metrics.at[epochs-1, 'val_accuracy'])
+
+
+    print('测试')
+    model2.eval()  # 评估模式
+    pred_np = test_pred_json(model2, test_dl)
+    pred_dict = {}
+    for i in range(df_test.shape[0]):
+        pred_dict[str(i)] = int(pred_np[i])
+    pred_json = json.dumps(pred_dict)
+    print(type(pred_json))
+    print(set(pred_np.tolist()), '\n', pred_json)
+    with open("submit.json", "w") as f:
+        f.write(pred_json)
+    f.close()
+
+
 

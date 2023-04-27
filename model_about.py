@@ -7,15 +7,6 @@ import pandas as pd
 
 
 
-def update_lr(optimizer, lr):
-    for g in optimizer.param_groups:
-        g['lr'] = lr
-
-def update_mom(optimizer, mom):
-    for g in optimizer.param_groups:
-        g['momentum'] = mom
-
-
 def loss_batch(model, loss_func, xb, yb, opt=None):
 
     out = model(xb)
@@ -34,7 +25,7 @@ def loss_batch(model, loss_func, xb, yb, opt=None):
     return loss.item(), len(xb), pred
 
 
-def fit(epochs, model, loss_func, opt, train_dl, valid_dl, one_cycle=None, train_metric=False):
+def fit(epochs, model, loss_func, opt, train_dl, valid_dl, train_metric=False):
 
     # Initialize dic to store metrics for each epoch.
     metrics_dic = {}
@@ -58,11 +49,6 @@ def fit(epochs, model, loss_func, opt, train_dl, valid_dl, one_cycle=None, train
             if train_metric == False:
                 train_loss += loss
                 num_examples += batch_size
-
-            if one_cycle:
-                lr, mom = one_cycle.calc()
-                update_lr(opt, lr)
-                update_mom(opt, mom)
 
         # Validate
         model.eval()
@@ -103,3 +89,15 @@ def validate(model, dl, loss_func):
     y_true = np.concatenate(y_true, axis=0)
     accuracy = np.mean((predictions == y_true))
     return mean_loss, accuracy, (y_true, predictions)
+
+def test_pred_json(model, test_dl):
+
+    predictions = np.array([])
+
+    for xb in test_dl:
+        out = model(xb)
+        pred = torch.argmax(out, dim=1).cpu().numpy()
+        predictions = np.append(predictions, pred)
+
+    return predictions
+

@@ -45,7 +45,7 @@ def process_feature(df):
     return df, feature_useful
 
 
-def train_valid_test(df):
+def train_valid(df):
     """
     train:valid:test =
     :param df:
@@ -59,7 +59,7 @@ def train_valid_test(df):
     return [train, valid]
 
 
-def get_loader(train_valid_test_ls, feature_useful, bs):
+def get_loader(train_valid_test_ls, df_test, feature_useful, bs):
 
     print('train head:')
     print(train_valid_test_ls[0][feature_useful].head())
@@ -67,11 +67,22 @@ def get_loader(train_valid_test_ls, feature_useful, bs):
     train_label_tensor = torch.tensor(train_valid_test_ls[0]['label'].values, dtype=torch.long)
     valid_features_tensor = torch.tensor(train_valid_test_ls[1][feature_useful].values, dtype=torch.float32)
     valid_label_tensor = torch.tensor(train_valid_test_ls[1]['label'].values, dtype=torch.long)
+    print('train', type(train_features_tensor))
+
+    print('test head:')
+    print(df_test[feature_useful].head())
+    test_features_tensor = torch.tensor(df_test[feature_useful].values, dtype=torch.float32)
+    print('test', type(test_features_tensor))
+
 
 
     train_ds = TensorDataset(train_features_tensor, train_label_tensor)
     valid_ds = TensorDataset(valid_features_tensor, valid_label_tensor)
+    # test_ds = TensorDataset(test_features_tensor)
+    test_ds = test_features_tensor
+
     return (
         DataLoader(train_ds, batch_size=bs, shuffle=True),
         DataLoader(valid_ds, batch_size=bs * 2),
+        DataLoader(test_ds, batch_size=bs)
     )
