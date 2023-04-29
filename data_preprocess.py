@@ -7,13 +7,13 @@ from scipy.stats import norm
 
 
 def normalize(column):
-    # mean = column.mean()
-    # std = column.std()
-    # return column.apply(lambda x: norm.cdf((x - mean) / std))
+    mean = column.mean()
+    std = column.std()
+    return column.apply(lambda x: norm.cdf((x - mean) / std))
 
-    max_v = column.max()
-    min_v = column.min()
-    return column.apply(lambda x: (x - min_v) / (max_v -min_v))
+    # max_v = column.max()
+    # min_v = column.min()
+    # return column.apply(lambda x: (x - min_v) / (max_v -min_v))
 
 def process_feature(df):
     """

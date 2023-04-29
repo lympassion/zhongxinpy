@@ -36,6 +36,9 @@ def fit(epochs, model, loss_func, opt, train_dl, valid_dl, train_metric=False):
     metrics_dic['val_accuracy'] = []
     device = torch.device("cuda") if torch.cuda.is_available() else torch.device("cpu")
 
+    for key in metrics_dic.keys():
+        print(key, end='\t')
+    print()
     for epoch in range(epochs):
         # Train
         model.train()
@@ -64,6 +67,10 @@ def fit(epochs, model, loss_func, opt, train_dl, valid_dl, train_metric=False):
         metrics_dic['val_accuracy'].append(val_accuracy)
         metrics_dic['train_loss'].append(train_loss)
         metrics_dic['train_accuracy'].append(train_accuracy)
+
+        for key in metrics_dic.keys():
+            print(metrics_dic[key][-1], end='\t')
+        print()
 
     metrics = pd.DataFrame.from_dict(metrics_dic)
 
@@ -95,6 +102,7 @@ def test_pred_json(model, test_dl):
     predictions = np.array([])
 
     for xb in test_dl:
+    # for xb,_ in test_dl:
         out = model(xb)
         pred = torch.argmax(out, dim=1).cpu().numpy()
         predictions = np.append(predictions, pred)
