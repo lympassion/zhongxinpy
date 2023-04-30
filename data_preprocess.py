@@ -9,7 +9,7 @@ from scipy.stats import norm
 def normalize(column):
     mean = column.mean()
     std = column.std()
-    return column.apply(lambda x: norm.cdf((x - mean) / std))
+    return (column - mean) / std
 
     # max_v = column.max()
     # min_v = column.min()

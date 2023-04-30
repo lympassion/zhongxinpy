@@ -25,8 +25,14 @@ class CNN_1D_2L(nn.Module):
             nn.AvgPool1d(2, stride=2)  # [64, 128, 125]
         )
 
+        self.layer3 = nn.Sequential(
+            nn.Linear((self.n_in // 4) * 128, 128),
+            nn.ReLU(),
+            nn.Linear(128, self.classes),
+        )
+
         # 最后线性层的输出应该是分的类别
-        self.linear1 = nn.Linear((self.n_in // 4) * 128, self.classes)
+        # self.linear1 = nn.Linear((self.n_in // 4) * 128, self.classes)
 
     def forward(self, x):
         # print('x', x.size())
@@ -40,7 +46,7 @@ class CNN_1D_2L(nn.Module):
         # 这里应该先整除，因为输入数据是[sample, 128, features//4]
         x = x.view(-1, (self.n_in // 4) * 128)
         # print('x = x.view(-1, self.n_in*128//4)', x.size())
-        return self.linear1(x)
+        return self.layer3(x)
 
 
 # 2 Layers CNN
@@ -54,6 +60,7 @@ class CNN_3D_2L(nn.Module):
             nn.BatchNorm3d(64),
             nn.ReLU(),
             nn.Dropout(p=0.5),
+            nn.MaxPool3d((2, 1, 1), stride=(2, 1, 1))
         )
 
         self.layer2 = nn.Sequential(
@@ -64,7 +71,7 @@ class CNN_3D_2L(nn.Module):
         )
 
         self.layer3 = nn.Sequential(
-            nn.Linear(self.n_in * 128, 128),
+            nn.Linear(self.n_in//2 * 128, 128),
             nn.ReLU(),
             nn.Linear(128, self.classes),
         )
@@ -86,7 +93,7 @@ class CNN_3D_2L(nn.Module):
         # print('x = self.layer2(x)', x.size())
         # x = x.view(-1, self.n_in*128//4)
         # 这里应该先整除，因为输入数据是[sample, 128, features//4]
-        x = x.view(-1, self.n_in * 128)
+        x = x.view(-1, self.n_in//2 * 128)
         # print('x = x.view(-1, self.n_in*128//4)', x.size())
 
         # return self.linear1(x)

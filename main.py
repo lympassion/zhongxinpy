@@ -21,7 +21,7 @@ import nn_model
 
 working_dir = Path('.')
 DATA_PATH = Path("./zx_data/train.csv")
-DATA_TEST_PATH = Path("./zx_data/pre_contest_test1.csv")
+DATA_TEST_PATH = Path("./zx_data/pre_contest_test2.csv")
 
 save_model_path = working_dir / 'zx_model'
 
@@ -54,18 +54,21 @@ df_test = pd.read_csv(DATA_TEST_PATH)
 
 if __name__ == '__main__':
 
+
     df, feature_useful = process_feature(df)
     df_test, _ = process_feature(df_test)
 
     train_valid_ls = train_valid(df)
     print('feature_useful:\n', len(feature_useful), feature_useful)
+    # with open("feature_useful.txt", "w") as f:
+    #     f.write(str(feature_useful))
+    # f.close()
 
 
     print('before get loader')
     train_dl, valid_dl, test_dl = get_loader(train_valid_ls, df_test, feature_useful, bs)
 
     # train_valid_ls[1].to_csv('valid.csv',index=False,header=True)
-
 
 
     # Training with Adams Optimizer
@@ -89,9 +92,9 @@ if __name__ == '__main__':
 
         # Save trained model
         if CNN==2:
-            torch.save(model.state_dict(), save_model_path.joinpath(str(epochs)+'model2.pth'))
+            torch.save(model.state_dict(), save_model_path.joinpath("epochs"+str(epochs)+'model2.pth'))
             model2 = nn_model.CNN_1D_2L(len(feature_useful))
-            model2.load_state_dict(torch.load(save_model_path.joinpath(str(epochs)+'model2.pth')))
+            model2.load_state_dict(torch.load(save_model_path.joinpath("epochs"+str(epochs)+'model2.pth')))
             # torch.save(model.state_dict(), save_model_path / 'model_resnet.pth')
             # model2 = nn_model.CNN_1D_2L_ResNet(len(feature_useful))
             # model2.load_state_dict(torch.load(save_model_path / 'model_resnet.pth'))
@@ -99,12 +102,12 @@ if __name__ == '__main__':
             # torch.save(model.state_dict(), save_model_path / 'model3.pth')
             # model2 = nn_model.CNN_1D_3L(len(feature_useful))
             # model2.load_state_dict(torch.load(save_model_path / 'model3.pth'))
-            torch.save(model.state_dict(),save_model_path.joinpath(str(epochs)+'model3d.pth'))
+            torch.save(model.state_dict(),save_model_path.joinpath("epochs"+str(epochs)+'model3d.pth'))
             model2 = nn_model.CNN_3D_2L(len(feature_useful))
-            model2.load_state_dict(torch.load(save_model_path.joinpath(str(epochs)+'model3d.pth')))
+            model2.load_state_dict(torch.load(save_model_path.joinpath("epochs"+str(epochs)+'model3d.pth')))
 
         # title = 'resnet'+ str(CNN) + 'layer  ' + '5 5 5' + 'kernel' + ' dropout 1'
-        title = type(model2).__name__ + 'epochs-' + str(epochs)+'-' + 'tow full connect'
+        title = type(model2).__name__ + 'epochs-' + str(epochs)+'-' + 'two full connect'
 
         metrics.plot(y = ['val_loss','val_accuracy','train_loss', 'train_accuracy'])
         plt.title(title)
@@ -125,7 +128,7 @@ if __name__ == '__main__':
         print(type(pred_json))
         print(set(pred_np.tolist()), '\n', pred_json)
 
-        with open(str(epochs)+"submit.json", "w") as f:
+        with open(str(epochs)+" submit.json", "w") as f:
             f.write(pred_json)
         f.close()
 
