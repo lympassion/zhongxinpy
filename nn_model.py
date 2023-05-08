@@ -186,14 +186,14 @@ class CNN_1D_2L_ResNet(nn.Module):
             ResNetBlock(self.out_channels, self.out_channels * 2),
             nn.BatchNorm1d(self.out_channels * 2),
             nn.ReLU(),
-            nn.Dropout(p=0.3),
+            nn.Dropout(p=0.5),
             nn.MaxPool1d(kernel_size=2, stride=2),
         )
         self.layer3 = nn.Sequential(
             ResNetBlock(self.out_channels * 2, self.out_channels * 4),
             nn.BatchNorm1d(self.out_channels * 4),
             nn.ReLU(),
-            nn.Dropout(p=0.3),
+            nn.Dropout(p=0.5),
             nn.MaxPool1d(kernel_size=2, stride=2),
         )
         self.avgpool = nn.AdaptiveAvgPool1d(1)

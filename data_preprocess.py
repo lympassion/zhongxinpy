@@ -1,10 +1,34 @@
 import torch
 from torch.utils.data import TensorDataset, DataLoader
-from scipy.stats import norm
+import pandas as pd
 
 
 
 
+def lower_sample_data(df):
+    label_cnt = df['label'].value_counts()
+    df_new = df[df['label']==4]
+    for k, v in label_cnt[0:5].items():
+        df_sample = df[df['label']==k]
+        frac = 351 / v
+        df_new = pd.concat([df_new, df_sample.sample(frac=frac)])
+
+    return df_new
+
+def up_sample_data(df):
+    label_cnt = df['label'].value_counts()
+    df_new = df[df['label'] == 0]
+    for k, v in label_cnt[1:6].items():
+        df_sample = df[df['label'] == k]
+        # 创建一个数据结构和之前一致，但空的dataframe
+        df_copy = df_sample[0:0].copy()
+        frac = int(3244 / v)
+        for i in range(frac):
+            if i != frac:
+                df_copy = df_copy.append(df_sample)
+        df_new = pd.concat([df_new,df_copy])
+
+    return df_new
 
 def normalize(column):
     mean = column.mean()

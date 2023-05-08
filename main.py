@@ -21,7 +21,7 @@ import nn_model
 
 working_dir = Path('.')
 DATA_PATH = Path("./zx_data/train.csv")
-DATA_TEST_PATH = Path("./zx_data/pre_contest_test2.csv")
+DATA_TEST_PATH = Path("./zx_data/pre_contest_test1.csv")
 
 save_model_path = working_dir / 'zx_model'
 
@@ -54,11 +54,16 @@ df_test = pd.read_csv(DATA_TEST_PATH)
 
 if __name__ == '__main__':
 
+    # 上采样
+    df = up_sample_data(df)  # test
+    print(df.shape[0])
+    # df.to_csv('up.csv', index=False, header=True)
 
     df, feature_useful = process_feature(df)
     df_test, _ = process_feature(df_test)
 
     train_valid_ls = train_valid(df)
+    # train_valid_ls[1].to_csv('valid.csv', index=False, header=True)
     print('feature_useful:\n', len(feature_useful), feature_useful)
     # with open("feature_useful.txt", "w") as f:
     #     f.write(str(feature_useful))
@@ -68,24 +73,21 @@ if __name__ == '__main__':
     print('before get loader')
     train_dl, valid_dl, test_dl = get_loader(train_valid_ls, df_test, feature_useful, bs)
 
-    # train_valid_ls[1].to_csv('valid.csv',index=False,header=True)
 
+    for epochs in range(20, 51, 10):
+        # Training with Adams Optimizer
+        CNN = 3  # 2: CNN_1D_2L else: CNN_1D_3L
+        if CNN == 2:
+            model = nn_model.CNN_1D_2L(len(feature_useful))
+            # model = nn_model.CNN_1D_2L_ResNet(len(feature_useful))
+        else:
+            # model = nn_model.CNN_1D_3L(len(feature_useful))
+            model = nn_model.CNN_3D_2L(len(feature_useful))
 
-    # Training with Adams Optimizer
-    CNN = 3  # 2: CNN_1D_2L else: CNN_1D_3L
-    if CNN==2:
-        model = nn_model.CNN_1D_2L(len(feature_useful))
-        # model = nn_model.CNN_1D_2L_ResNet(len(feature_useful))
-    else:
-        # model = nn_model.CNN_1D_3L(len(feature_useful))
-        model = nn_model.CNN_3D_2L(len(feature_useful))
+        model.to(device)
+        opt = optim.Adam(model.parameters(), lr=lr, betas=betas, weight_decay=wd)
+        loss_func = CrossEntropyLoss()
 
-
-    model.to(device)
-    opt = optim.Adam(model.parameters(), lr=lr, betas=betas, weight_decay=wd)
-    loss_func = CrossEntropyLoss()
-
-    for epochs in range(10, 101, 10):
         model, metrics = fit(epochs, model, loss_func, opt, train_dl, valid_dl, train_metric=True)
         print(metrics)
 
@@ -107,7 +109,7 @@ if __name__ == '__main__':
             model2.load_state_dict(torch.load(save_model_path.joinpath("epochs"+str(epochs)+'model3d.pth')))
 
         # title = 'resnet'+ str(CNN) + 'layer  ' + '5 5 5' + 'kernel' + ' dropout 1'
-        title = type(model2).__name__ + 'epochs-' + str(epochs)+'-' + 'two full connect'
+        title = type(model2).__name__ + 'epochs-' + str(epochs)+'-' + 'up sample'
 
         metrics.plot(y = ['val_loss','val_accuracy','train_loss', 'train_accuracy'])
         plt.title(title)
@@ -133,16 +135,23 @@ if __name__ == '__main__':
         f.close()
 
     # print('测试')
+    # model2 = nn_model.CNN_1D_2L(len(feature_useful))
+    # model2.load_state_dict(torch.load(save_model_path.joinpath("epochs"+str(30)+'model2.pth')))
+    #
     # model2.eval()  # 评估模式
-    # pred_np = test_pred_json(model2, valid_dl)
+    # # pred_np = test_pred_json(model2, valid_dl)  # test
+    # pred_np = test_pred_json(model2, test_dl)  # test
+    #
+    #
     # pred_dict = {}
-    # for i in range(train_valid_ls[1].shape[0]):
+    # # for i in range(train_valid_ls[1].shape[0]):  # test
+    # for i in range(df_test.shape[0]):  # test
     #     pred_dict[str(i)] = int(pred_np[i])
     # pred_json = json.dumps(pred_dict)
     # print(type(pred_json))
     # print(set(pred_np.tolist()), '\n', pred_json)
     #
-    # with open("submit.json", "w") as f:
+    # with open(str(30) +" submit.json", "w") as f:
     #     f.write(pred_json)
     # f.close()
 
