@@ -1,40 +1,21 @@
-import torch.nn as nn
-import torch
+from sklearn.datasets import load_iris
+from sklearn.ensemble import RandomForestClassifier
+import pandas as pd
+import numpy as np
 
-# 假设原始数据集大小为(100, 1, 1024)
-batch_size = 100
-n_channels = 1
-n_features = 1024
+iris = load_iris()
+df = pd.DataFrame(iris.data, columns=iris.feature_names)
+df['is_train'] = np.random.uniform(0, 1, len(df)) <= .75
+df['species'] = pd.Categorical.from_codes(iris.target, iris.target_names)
+df.head()
 
-# 将数据集变形为(100, 1, 1024, 1, 1)，其中n_timesteps=128，n_features=8
+train, test = df[df['is_train']==True], df[df['is_train']==False]
 
-data = torch.randn(batch_size, n_channels, n_features)
-data = data.view(batch_size, n_channels, n_features, 1, 1)
+features = df.columns[:4]
+clf = RandomForestClassifier(n_jobs=1)
+y, _ = pd.factorize(train['species'])
+clf.fit(train[features], y)
 
-
-# 定义3D卷积网络
-class Conv3DNet(nn.Module):
-    def __init__(self):
-        super(Conv3DNet, self).__init__()
-        self.conv1 = nn.Conv3d(1, 64, kernel_size=(3, 3, 3), padding=(1, 1, 1))
-        self.conv2 = nn.Conv3d(64, 128, kernel_size=(3, 3, 3), padding=(1, 1, 1))
-        self.fc1 = nn.Linear(128 * n_features, 256)
-        self.fc2 = nn.Linear(256, 6)
-
-    def forward(self, x):
-        x = self.conv1(x)
-        x = nn.functional.relu(x)
-        # x = nn.functional.max_pool3d(x, kernel_size=(2, 2, 2), stride=(2, 2, 2))
-        x = self.conv2(x)
-        x = nn.functional.relu(x)
-        # x = nn.functional.max_pool3d(x, kernel_size=(2, 2, 2), stride=(2, 2, 2))
-        x = x.view(-1, 128 * n_features)
-        x = self.fc1(x)
-        x = nn.functional.relu(x)
-        x = self.fc2(x)
-        return x
-
-
-# 创建模型实例并进行前向传播
-net = Conv3DNet()
-output = net(data)
+preds = iris.target_names[clf.predict(test[features])]
+ans = pd.crosstab(test['species'], preds, rownames=['actual'], colnames=['preds'])
+print(ans)

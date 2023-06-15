@@ -74,9 +74,9 @@ if __name__ == '__main__':
     train_dl, valid_dl, test_dl = get_loader(train_valid_ls, df_test, feature_useful, bs)
 
 
-    for epochs in range(20, 51, 10):
+    for epochs in range(10, 20, 10):
         # Training with Adams Optimizer
-        CNN = 3  # 2: CNN_1D_2L else: CNN_1D_3L
+        CNN = 2  # 2: CNN_1D_2L else: CNN_1D_3L
         if CNN == 2:
             model = nn_model.CNN_1D_2L(len(feature_useful))
             # model = nn_model.CNN_1D_2L_ResNet(len(feature_useful))

@@ -4,7 +4,7 @@ from torch.utils.data import TensorDataset, DataLoader
 
 import numpy as np
 import pandas as pd
-
+from sklearn.metrics import accuracy_score
 
 
 def loss_batch(model, loss_func, xb, yb, opt=None):
@@ -56,7 +56,7 @@ def fit(epochs, model, loss_func, opt, train_dl, valid_dl, train_metric=False):
         # Validate
         model.eval()
         with torch.no_grad():
-            val_loss, val_accuracy, _ = validate(model, valid_dl, loss_func)
+            val_loss, val_accuracy, _ = validate(model, valid_dl, loss_func, flag=False)
             if train_metric:
                 train_loss, train_accuracy, _ = validate(model, train_dl, loss_func)
             else:
@@ -77,7 +77,7 @@ def fit(epochs, model, loss_func, opt, train_dl, valid_dl, train_metric=False):
     return model, metrics
 
 
-def validate(model, dl, loss_func):
+def validate(model, dl, loss_func, flag=True):
     total_loss = 0.0
     total_size = 0
     predictions = []
@@ -95,6 +95,10 @@ def validate(model, dl, loss_func):
     predictions = np.concatenate(predictions, axis=0)
     y_true = np.concatenate(y_true, axis=0)
     accuracy = np.mean((predictions == y_true))
+
+    if flag == False:
+        print("卷积预测正确率")
+        print(accuracy_score(y_true, predictions))
     return mean_loss, accuracy, (y_true, predictions)
 
 def test_pred_json(model, test_dl):
